@@ -1,0 +1,78 @@
+════════════════════════════════════════════════════════════════
+🚀 COMANDOS PARA COPIAR Y PEGAR - PROYECTO S08
+════════════════════════════════════════════════════════════════
+
+# ===== DESPLIEGUE COMPLETO =====
+
+# 1. Iniciar Minikube
+minikube start
+
+# 2. Crear namespace
+kubectl create namespace practica-s08
+
+# 3. Desplegar TODOS los recursos
+kubectl apply -f k8s/ -n practica-s08
+
+# 4. Esperar a que los pods estén listos
+kubectl get pods -n practica-s08 -w
+
+# ===== CAPTURAS DE PANTALLA =====
+
+# CAPTURA 1: Estado del clúster
+kubectl get pods,svc,configmaps,secrets -n practica-s08
+
+# CAPTURA 2: Variables de entorno inyectadas
+export BACKEND_POD=$(kubectl get pod -n practica-s08 -l app=backend -o jsonpath="{.items[0].metadata.name}")
+kubectl exec -it $BACKEND_POD -n practica-s08 -- env | grep -E "DB_|APP_"
+
+# CAPTURA 3: URL para acceder desde el navegador
+minikube service backend-service -n practica-s08 --url
+
+# ===== VALIDACIONES ADICIONALES =====
+
+# Ver logs del backend
+kubectl logs -n practica-s08 -l app=backend --tail=50
+
+# Ver logs de MongoDB
+kubectl logs -n practica-s08 -l app=mongodb --tail=50
+
+# Probar endpoint /health
+curl $(minikube service backend-service -n practica-s08 --url)/health
+
+# Probar endpoint /env (ver variables inyectadas)
+curl $(minikube service backend-service -n practica-s08 --url)/env
+
+# Ver descripción completa del backend
+kubectl describe deployment backend -n practica-s08
+
+# Ver descripción completa de MongoDB
+kubectl describe deployment mongodb -n practica-s08
+
+# Ver el ConfigMap
+kubectl get configmap app-config -n practica-s08 -o yaml
+
+# Ver el Secret (en base64)
+kubectl get secret db-secret -n practica-s08 -o yaml
+
+# Decodificar credenciales del Secret
+echo "YWRtaW4=" | base64 -d
+echo "c2VjcmV0MTIz" | base64 -d
+
+# ===== PORT-FORWARD (alternativa si NodePort no funciona) =====
+kubectl port-forward -n practica-s08 svc/backend-service 8080:3000
+# Luego abrir: http://localhost:8080
+
+# ===== LIMPIAR TODO =====
+kubectl delete namespace practica-s08
+
+# ===== VERIFICAR MINIKUBE =====
+minikube status
+minikube ip
+kubectl cluster-info
+
+════════════════════════════════════════════════════════════════
+📝 NOTAS:
+- Todos estos comandos se ejecutan en Git Bash o PowerShell
+- El despliegue completo toma entre 3-5 minutos
+- Los pods deben estar en estado "Running" antes de hacer las capturas
+════════════════════════════════════════════════════════════════
